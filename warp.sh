@@ -40,6 +40,47 @@ done
 
 [[ -z $SYSTEM ]] && red "目前脚本暂未支持 ${SYS} 系统！" && exit 1
 
+manage1(){
+    green "请选择以下选项："
+    echo -e " ${GREEN}1.${PLAIN} 安装/切换 Wgcf-WARP单栈模式 ${YELLOW}(WARP IPv4)${PLAIN}"
+    echo -e " ${GREEN}2.${PLAIN} 安装/切换 Wgcf-WARP单栈模式 ${YELLOW}(WARP IPv6)${PLAIN}"
+    echo -e " ${GREEN}3.${PLAIN} 安装/切换 Wgcf-WARP双栈模式 ${YELLOW}(WARP IPv4+IPv6)${PLAIN}"
+    echo -e " ${GREEN}4.${PLAIN} 开启、关闭和重启 Wgcf-WARP"
+    echo -e " ${GREEN}5.${PLAIN} ${RED}卸载 Wgcf-WARP${PLAIN}"
+    read -rp "请输入选项：" answer1
+    case $answer1 in
+        *) exit 1 ;;
+    esac
+}
+
+manage2(){
+    green "请选择以下选项："
+    read -rp "请输入选项：" answer2
+    case $answer2 in
+        *) exit 1 ;;
+    esac
+}
+
+manage3(){
+    green "请选择以下选项："
+    read -rp "请输入选项：" answer3
+    case $answer3 in
+        *) exit 1 ;;
+    esac
+}
+
+manage4(){
+    green "请选择以下选项："
+    echo -e " ${GREEN}1.${PLAIN} 提取WireGuard配置文件"
+    echo -e " ${GREEN}2.${PLAIN} WARP+账户刷流量"
+    echo -e " ${GREEN}3.${PLAIN} 切换WARP账户"
+    echo -e " ${GREEN}4.${PLAIN} 获取解锁NF的WARP IP"
+    read -rp "请输入选项：" answer4
+    case $answer4 in
+        *) exit 1 ;;
+    esac
+}
+
 menu(){
     yellow " CloudFlare WARP 一键脚本 "
     yellow "      by Mikupeto"
