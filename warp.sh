@@ -45,9 +45,12 @@ menu(){
     yellow "      by Mikupeto"
     echo ""
     echo  " ---------------------- "
-    echo -e "${GREEN}1.${PLAIN} 安装/切换 Wgcf-WARP"
+    echo -e " ${GREEN}1.${PLAIN} 管理 Wgcf-WARP"
+    echo -e " ${GREEN}2.${PLAIN} 管理 WARP-Cli"
+    echo -e " ${GREEN}3.${PLAIN} 管理 WireProxy-WARP"
+    echo -e " ${GREEN}4.${PLAIN} WARP 脚本小工具"
     echo  " -------------------- "
-    echo -e "${GREEN}0.${PLAIN} 退出脚本"
+    echo -e " ${GREEN}0.${PLAIN} 退出脚本"
     echo ""
     read -rp "请输入选项：" answer
     case $answer in
