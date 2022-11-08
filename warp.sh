@@ -39,3 +39,20 @@ for ((int = 0; int < ${#REGEX[@]}; int++)); do
 done
 
 [[ -z $SYSTEM ]] && red "目前脚本暂未支持 ${SYS} 系统！" && exit 1
+
+menu(){
+    yellow " CloudFlare WARP 一键脚本 "
+    yellow "      by Mikupeto"
+    echo ""
+    echo  " ---------------------- "
+    echo -e "${GREEN}1.${PLAIN} 安装/切换 Wgcf-WARP"
+    echo  " -------------------- "
+    echo -e "${GREEN}0.${PLAIN} 退出脚本"
+    echo ""
+    read -rp "请输入选项：" answer
+    case $answer in
+        *) exit 1 ;;
+    esac
+}
+
+menu
