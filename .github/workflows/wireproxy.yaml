@@ -1,4 +1,4 @@
-name: Fetch wgcf to latest version
+name: Fetch wireproxy to latest version
 
 on:
   workflow_dispatch:
@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3.1.0
-      - name: Fetch wgcf to latest version
+      - name: Fetch wireproxy to latest version
         run: |
           rm -f files/wireproxy/wireproxy-latest-linux-amd64 files/wireproxy/wireproxy-latest-linux-arm64 files/wireproxy/wireproxy-latest-linux-s390x files/wireproxy/wireproxy-fetchlog.txt
           actions_date=$(date)
