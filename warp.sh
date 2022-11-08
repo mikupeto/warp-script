@@ -55,6 +55,10 @@ manage1(){
 
 manage2(){
     green "请选择以下选项："
+    echo -e " ${GREEN}1.${PLAIN} 安装 WARP-Cli 并添加IPv4网卡出口"
+    echo -e " ${GREEN}2.${PLAIN} 安装 WARP-Cli 并创建本地Socks5代理"
+    echo -e " ${GREEN}3.${PLAIN} 开启、关闭和重启 WARP-Cli"
+    echo -e " ${GREEN}4.${PLAIN} ${RED}卸载 WARP-Cli${PLAIN}"
     read -rp "请输入选项：" answer2
     case $answer2 in
         *) exit 1 ;;
@@ -63,6 +67,9 @@ manage2(){
 
 manage3(){
     green "请选择以下选项："
+    echo -e " ${GREEN}1.${PLAIN} 安装 WireProxy-WARP 并创建本地Socks5代理"
+    echo -e " ${GREEN}2.${PLAIN} 开启、关闭和重启 WireProxy-WARP"
+    echo -e " ${GREEN}3.${PLAIN} ${RED}卸载 WireProxy-WARP${PLAIN}"
     read -rp "请输入选项：" answer3
     case $answer3 in
         *) exit 1 ;;
@@ -95,6 +102,10 @@ menu(){
     echo ""
     read -rp "请输入选项：" answer
     case $answer in
+        1) manage1 ;;
+        2) manage2 ;;
+        3) manage3 ;;
+        4) manage4 ;;
         *) exit 1 ;;
     esac
 }
