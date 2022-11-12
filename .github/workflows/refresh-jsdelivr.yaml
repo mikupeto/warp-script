@@ -1,0 +1,14 @@
+name: Fetch script's Jsdelivr cache
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3.1.0
+      - name: Fetch script's Jsdelivr cache
+        run: |
+          curl https://purge.jsdelivr.net/gh/mikupeto/warp-script/warp.sh
