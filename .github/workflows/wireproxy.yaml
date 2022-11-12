@@ -40,3 +40,8 @@ jobs:
           git add .
           git commit -m "CI: Auto fetch wireproxy at $(date +"%m-%d %H:%M")"
           git push
+      - name: Refresh Jsdelivr cache
+        run: |
+          curl https://purge.jsdelivr.net/gh/mikupeto/warp-script/files/wireproxy/wireproxy-latest-linux-amd64
+          curl https://purge.jsdelivr.net/gh/mikupeto/warp-script/files/wireproxy/wireproxy-latest-linux-arm64
+          curl https://purge.jsdelivr.net/gh/mikupeto/warp-script/files/wireproxy/wireproxy-latest-linux-s390x
