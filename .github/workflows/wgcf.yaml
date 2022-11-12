@@ -32,3 +32,8 @@ jobs:
           git add .
           git commit -m "CI: Auto fetch wgcf at $(date +"%m-%d %H:%M")"
           git push
+      - name: Refresh Jsdelivr cache
+        run: |
+          curl https://purge.jsdelivr.net/gh/mikupeto/warp-script/files/wgcf/wgcf-latest-linux-amd64
+          curl https://purge.jsdelivr.net/gh/mikupeto/warp-script/files/wgcf/wgcf-latest-linux-arm64
+          curl https://purge.jsdelivr.net/gh/mikupeto/warp-script/files/wgcf/wgcf-latest-linux-s390x
