@@ -64,6 +64,16 @@ checkstack(){
     fi
 }
 
+checkwarp(){
+    warpv4=$(curl -s4m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
+    warpv6=$(curl -s6m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
+}
+
+checkv4v6(){
+    ipv4=$(curl -s4m8 api.ipify.org)
+    ipv6=$(curl -s6m8 api64.ipify.org)
+}
+
 manage1(){
     green "请选择以下选项："
     echo -e " ${GREEN}1.${PLAIN} 安装/切换 Wgcf-WARP单栈模式 ${YELLOW}(WARP IPv4)${PLAIN}"
