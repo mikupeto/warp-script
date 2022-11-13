@@ -443,6 +443,26 @@ unstwgcf(){
     green "Wgcf-WARP 已彻底卸载成功!"
 }
 
+wgfile(){
+    yellow "请选择将要生成的配置文件的网络环境："
+    green "1. IPv4 （默认）"
+    green "2. IPv6"
+    read -rp "请输入选项 [1-2]：" netInput
+    case $netInput in
+        1) endpointip="162.159.193.10" ;;
+        2) endpointip="[2606:4700:d0::]" ;;
+        *) endpointip="162.159.193.10" ;;
+    esac
+    cp -f /etc/wireguard/wgcf.conf /root/wgcf-proxy.conf
+    sed -i '/PostUp/d;/PostDown/d;/AllowedIPs/d;/Endpoint/d' /root/wgcf-proxy.conf
+    sed -i "8a AllowedIPs = 0.0.0.0\/0\nAllowedIPs = ::\/0\n" /root/wgcf-proxy.conf
+    sed -i "10a Endpoint = $endpointip:2408" /root/wgcf-proxy.conf
+    green "Wgcf-WARP的WireGuard配置文件已提取成功！"
+    yellow "文件已保存至：/root/wgcf-proxy.conf"
+    yellow "WireGuard 节点配置二维码如下所示："
+    qrencode -t ansiutf8 < /root/wgcf-proxy.conf
+}
+
 manage1(){
     green "请选择以下选项："
     echo -e " ${GREEN}1.${PLAIN} 安装/切换 Wgcf-WARP 单栈模式 ${YELLOW}(WARP IPv4)${PLAIN}"
@@ -492,6 +512,7 @@ manage4(){
     echo -e " ${GREEN}4.${PLAIN} 获取解锁NF的WARP IP"
     read -rp "请输入选项：" answer4
     case $answer4 in
+        1) wgfile ;;
         *) exit 1 ;;
     esac
 }
