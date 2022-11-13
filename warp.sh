@@ -455,6 +455,7 @@ manage1(){
         1) wgcfv4 ;;
         2) wgcfv6 ;;
         3) wgcfv46 ;;
+        4) switchwgcf ;;
         5) unstwgcf ;;
         *) exit 1 ;;
     esac
