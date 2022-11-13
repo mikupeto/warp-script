@@ -428,7 +428,7 @@ switchwgcf(){
         checkwgcf
     elif [[ $answerwgcf == 3 ]]; then
         wg-quick down wgcf >/dev/null 2>&1
-        systemctl disable wg-quick@wgcf >/dev/null 2>&
+        systemctl disable wg-quick@wgcf >/dev/null 2>&1
         green "Wgcf-WARP 已停止成功！"
     fi
 }
