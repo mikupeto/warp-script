@@ -373,6 +373,8 @@ installwgcf(){
     cp -f wgcf-profile.conf /etc/wireguard/wgcf.conf >/dev/null 2>&1
     mv -f wgcf-profile.conf /etc/wireguard/wgcf-profile.conf >/dev/null 2>&1
     mv -f wgcf-account.toml /etc/wireguard/wgcf-account.toml >/dev/null 2>&1
+
+    wgcfcheck
 }
 
 switchconf(){
