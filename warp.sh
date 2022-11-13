@@ -413,11 +413,41 @@ wgcfcheck(){
     done
 }
 
+switchwgcf(){
+    green "请选择以下选项："
+    echo -e " ${GREEN}1.${PLAIN} 重启 Wgcf-WARP"
+    echo -e " ${GREEN}2.${PLAIN} 启动 Wgcf-WARP"
+    echo -e " ${GREEN}3.${PLAIN} 停止 Wgcf-WARP"
+    read -rp "请输入选项：" answerwgcf
+    case $answerwgcf in
+        1) wg-quick down wgcf >/dev/null 2>&1 && wg-quick up wgcf >/dev/null 2>&1 ;;
+        2) wg-quick up wgcf >/dev/null 2>&1 && systemctl enable wg-quick@wgcf >/dev/null 2>&1 ;;
+        3) wg-quick down wgcf >/dev/null 2>&1 && systemctl disable wg-quick@wgcf >/dev/null 2>&1 ;;
+        *) exit 1 ;;
+    esac
+}
+
+unstwgcf(){
+    wg-quick down wgcf 2>/dev/null
+    systemctl disable wg-quick@wgcf 2>/dev/null
+    ${PACKAGE_UNINSTALL[int]} wireguard-tools wireguard-dkms
+    if [[ -z $(type -P wireproxy) ]]; then
+        rm -f /usr/local/bin/wgcf
+        rm -f /etc/wireguard/wgcf-account.toml
+    fi
+    rm -f /etc/wireguard/wgcf.conf
+    rm -f /usr/bin/wireguard-go
+    if [[ -e /etc/gai.conf ]]; then
+        sed -i '/^precedence[ ]*::ffff:0:0\/96[ ]*100/d' /etc/gai.conf
+    fi
+    green "Wgcf-WARP 已彻底卸载成功!"
+}
+
 manage1(){
     green "请选择以下选项："
     echo -e " ${GREEN}1.${PLAIN} 安装/切换 Wgcf-WARP 单栈模式 ${YELLOW}(WARP IPv4)${PLAIN}"
     echo -e " ${GREEN}2.${PLAIN} 安装/切换 Wgcf-WARP 单栈模式 ${YELLOW}(WARP IPv6)${PLAIN}"
-    echo -e " ${GREEN}3.${PLAIN} 安装/切换 Wgcf-WARP 双栈模式 ${YELLOW}(WARP IPv4+IPv6)${PLAIN}"
+    echo -e " ${GREEN}3.${PLAIN} 安装/切换 Wgcf-WARP 双栈模式"
     echo -e " ${GREEN}4.${PLAIN} 开启、关闭和重启 Wgcf-WARP"
     echo -e " ${GREEN}5.${PLAIN} ${RED}卸载 Wgcf-WARP${PLAIN}"
     read -rp "请输入选项：" answer1
@@ -425,6 +455,7 @@ manage1(){
         1) wgcfv4 ;;
         2) wgcfv6 ;;
         3) wgcfv46 ;;
+        5) unstwgcf ;;
         *) exit 1 ;;
     esac
 }
