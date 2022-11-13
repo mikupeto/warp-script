@@ -90,6 +90,40 @@ checkwarp(){
     warpv6=$(curl -s6m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
 }
 
+checkmtu(){
+    yellow "正在检测并设置MTU最佳值, 请稍等..."
+    checkv4v6
+    MTUy=1500
+    MTUc=10
+    if [[ -n ${v6} && -z ${v4} ]]; then
+        ping='ping6'
+        IP1='2606:4700:4700::1001'
+        IP2='2001:4860:4860::8888'
+    else
+        ping='ping'
+        IP1='1.1.1.1'
+        IP2='8.8.8.8'
+    fi
+    while true; do
+        if ${ping} -c1 -W1 -s$((${MTUy} - 28)) -Mdo ${IP1} >/dev/null 2>&1 || ${ping} -c1 -W1 -s$((${MTUy} - 28)) -Mdo ${IP2} >/dev/null 2>&1; then
+            MTUc=1
+            MTUy=$((${MTUy} + ${MTUc}))
+        else
+            MTUy=$((${MTUy} - ${MTUc}))
+            if [[ ${MTUc} = 1 ]]; then
+                break
+            fi
+        fi
+        if [[ ${MTUy} -le 1360 ]]; then
+            MTUy='1360'
+            break
+        fi
+    done
+    MTU=$((${MTUy} - 80))
+    sed -i "s/MTU.*/MTU = $MTU/g" wgcf-profile.conf
+    green "MTU 最佳值=$MTU 已设置完毕"
+}
+
 checktun(){
     if [[ ! $TUN =~ "in bad state"|"处于错误状态"|"ist in schlechter Verfassung" ]]; then
         if [[ $VIRT == lxc ]]; then
@@ -134,16 +168,72 @@ wgcfreg(){
     chmod +x wgcf-profile.conf
 }
 
+wgcfv4(){
+    checkwarp
+    if [[ $warpv4 =~ on|plus ]] || [[ $warpv6 =~ on|plus ]]; then
+        wg-quick down wgcf >/dev/null 2>&1
+        checkstack
+        wg-quick up wgcf >/dev/null 2>&1
+    else
+        checkstack
+    fi
+
+    if [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]]; then
+        if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+            yellow "检测为纯IPv4的VPS，正在切换为Wgcf-WARP全局单栈模式 (WARP IPv4)"
+            wgcf1=$wg5 && wgcf2=$wg7 && wgcf3=$wg2 && wgcf4=$wg3
+            switchconf
+        else
+            yellow "检测为纯IPv4的VPS，正在安装Wgcf-WARP全局单栈模式 (WARP IPv4)"
+            wgcf1=$wg5 && wgcf2=$wg7 && wgcf3=$wg2 && wgcf4=$wg3
+            installwgcf
+        fi
+    elif [[ -z $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
+        if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+            yellow "检测为纯IPv6的VPS，正在切换为Wgcf-WARP全局单栈模式 (WARP IPv4 + 原生 IPv6)"
+            wgcf1=$wg6 && wgcf2=$wg2 && wgcf3=$wg4
+            switchconf
+        else
+            yellow "检测为纯IPv6的VPS，正在安装Wgcf-WARP全局单栈模式 (WARP IPv4 + 原生 IPv6)"
+            wgcf1=$wg6 && wgcf2=$wg2 && wgcf3=$wg4
+            installwgcf
+        fi
+    elif [[ -n $lan4 && -n $out4 && -n $lan6 && -n $out6 ]]; then
+        if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+            yellow "检测为原生双栈的VPS，正在切换为Wgcf-WARP全局单栈模式 (WARP IPv4 + 原生 IPv6)"
+            wgcf1=$wg5 && wgcf2=$wg7 && wgcf3=$wg2
+            switchconf
+        else
+            yellow "检测为原生双栈的VPS，正在安装Wgcf-WARP全局单栈模式 (WARP IPv4 + 原生 IPv6)"
+            wgcf1=$wg5 && wgcf2=$wg7 && wgcf3=$wg2
+            installwgcf
+        fi
+    elif [[ -n $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
+        if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+            yellow "检测为NAT IPv4+原生 IPv6的VPS，正在切换为Wgcf-WARP全局单栈模式 (WARP IPv4 + 原生 IPv6)"
+            wgcf1=$wg6 && wgcf2=$wg7 && wgcf3=$wg2 && wgcf4=$wg4
+            switchconf
+        else
+            yellow "检测为NAT IPv4+原生IPv6的VPS，正在安装Wgcf-WARP全局单栈模式 (WARP IPv4 + 原生 IPv6)"
+            wgcf1=$wg6 && wgcf2=$wg7 && wgcf3=$wg2 && wgcf4=$wg4
+            installwgcf
+        fi
+    fi
+}
+
+wgcfconf(){
+    echo $wgcf1 | sh
+    echo $wgcf2 | sh
+    echo $wgcf3 | sh
+    echo $wgcf4 | sh
+}
+
 installwgcf(){
     checktun
 
     if [[ $SYSTEM == "CentOS" ]]; then
         ${PACKAGE_INSTALL[int]} epel-release
         ${PACKAGE_INSTALL[int]} sudo curl wget iproute net-tools wireguard-tools iptables bc htop screen python3 iputils qrencode
-        if [[ $OSID == 9 ]] && [[ -z $(type -P resolvconf) ]]; then
-            wget -N https://gitlab.com/misakablog/warp-script/-/raw/main/files/resolvconf -O /usr/sbin/resolvconf
-            chmod +x /usr/sbin/resolvconf
-        fi
     fi
     if [[ $SYSTEM == "Fedora" ]]; then
         ${PACKAGE_INSTALL[int]} sudo curl wget iproute net-tools wireguard-tools iptables bc htop screen python3 iputils qrencode
@@ -168,6 +258,50 @@ installwgcf(){
 
     initwgcf
     wgcfreg
+    checkmtu
+
+    if [[ ! -d "/etc/wireguard" ]]; then
+        mkdir /etc/wireguard
+    fi
+    
+    cp -f wgcf-profile.conf /etc/wireguard/wgcf.conf >/dev/null 2>&1
+    mv -f wgcf-profile.conf /etc/wireguard/wgcf-profile.conf >/dev/null 2>&1
+    mv -f wgcf-account.toml /etc/wireguard/wgcf-account.toml >/dev/null 2>&1
+}
+
+switchconf(){
+    wg-quick down wgcf >/dev/null 2>&1
+
+    rm -rf /etc/wireguard/wgcf.conf
+    cp -f /etc/wireguard/wgcf-profile.conf /etc/wireguard/wgcf.conf
+
+    wgcfconf
+    wgcfcheck
+}
+
+wgcfcheck(){
+    yellow "正在启动 Wgcf-WARP"
+    i=0
+    while [ $i -le 4 ]; do let i++
+        wg-quick down wgcf >/dev/null 2>&1
+        wg-quick up wgcf >/dev/null 2>&1
+        checkwarp
+        if [[ $warpv4 =~ on|plus ]] || [[ $warpv6 =~ on|plus ]]; then
+            green "Wgcf-WARP 已启动成功！"
+            break
+        else
+            red "Wgcf-WARP 启动失败！"
+        fi
+        checkwarp
+        if [[ ! $warpv4 =~ on|plus && ! $warpv6 =~ on|plus ]]; then
+            red "安装Wgcf-WARP失败！"
+            green "建议如下："
+            yellow "1. 建议使用官方源升级系统及内核加速！如已使用第三方源及内核加速，请务必更新到最新版，或重置为官方源"
+            yellow "2. 部分VPS系统极度精简，相关依赖需自行安装后再尝试"
+            yellow "3. 查看https://www.cloudflarestatus.com/，如当前VPS区域可能处于【Re-routed】状态时，代表你的VPS无法使用Wgcf-WARP"
+            exit 1
+        fi
+    done
 }
 
 manage1(){
