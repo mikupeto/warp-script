@@ -66,6 +66,11 @@ if [[ -z $(type -P curl) ]]; then
     ${PACKAGE_INSTALL[int]} curl
 fi
 
+if [[ ! -f /usr/local/bin/nf ]]; then
+    wget https://cdn.jsdelivr.net/gh/mikupeto/warp-script/files/netflix-verify/nf-linux-$(archAffix) -O /usr/local/bin/nf
+    chmod +x /usr/local/bin/nf
+fi
+
 archAffix(){
     case "$(uname -m)" in
         x86_64 | amd64 ) echo 'amd64' ;;
