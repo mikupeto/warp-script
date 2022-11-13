@@ -55,6 +55,7 @@ wg9='sed -i "7 s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -o
 
 main=$(uname -r | awk -F . '{print $1}')
 minor=$(uname -r | awk -F . '{print $2}')
+VERID=$(grep -i version_id /etc/os-release | cut -d \" -f2 | cut -d . -f1)
 VIRT=$(systemd-detect-virt)
 TUN=$(cat /dev/net/tun 2>&1 | tr '[:upper:]' '[:lower:]')
 
@@ -442,6 +443,8 @@ unstwgcf(){
     fi
     green "Wgcf-WARP 已彻底卸载成功!"
 }
+
+
 
 wgfile(){
     yellow "请选择将要生成的配置文件的网络环境："
