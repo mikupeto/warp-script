@@ -134,7 +134,7 @@ checktun(){
                 return 0
             fi
         elif [[ $VIRT == "openvz" ]]; then
-            wget -N --no-check-certificate https://gitlab.com/misakablog/warp-script/-/raw/main/files/tun.sh && bash tun.sh
+            wget -N --no-check-certificate https://cdn.jsdelivr.net/gh/mikupeto/warp-script/files/tun.sh && bash tun.sh
         else
             red "检测到目前VPS未开启TUN模块, 请到后台控制面板处开启"
             exit 1
