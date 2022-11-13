@@ -1,4 +1,4 @@
-name: Fetch Netflix verify latest version
+name: Fetch Netflix verify to latest version
 
 on:
   workflow_dispatch:
