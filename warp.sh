@@ -53,6 +53,11 @@ wg7='sed -i "7 s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -o
 wg8='sed -i "7 s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf'
 wg9='sed -i "7 s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf'
 
+main=$(uname -r | awk -F . '{print $1}')
+minor=$(uname -r | awk -F . '{print $2}')
+VIRT=$(systemd-detect-virt)
+TUN=$(cat /dev/net/tun 2>&1 | tr '[:upper:]' '[:lower:]')
+
 if [[ -z $(type -P curl) ]]; then
     if [[ ! $SYSTEM == "CentOS" ]]; then
         ${PACKAGE_UPDATE[int]}
@@ -85,6 +90,24 @@ checkwarp(){
     warpv6=$(curl -s6m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
 }
 
+checktun(){
+    if [[ ! $TUN =~ "in bad state"|"处于错误状态"|"ist in schlechter Verfassung" ]]; then
+        if [[ $VIRT == lxc ]]; then
+            if [[ $main -lt 5 ]] || [[ $minor -lt 6 ]]; then
+                red "检测到目前VPS未开启TUN模块, 请到后台控制面板处开启"
+                exit 1
+            else
+                return 0
+            fi
+        elif [[ $VIRT == "openvz" ]]; then
+            wget -N --no-check-certificate https://gitlab.com/misakablog/warp-script/-/raw/main/files/tun.sh && bash tun.sh
+        else
+            red "检测到目前VPS未开启TUN模块, 请到后台控制面板处开启"
+            exit 1
+        fi
+    fi
+}
+
 checkv4v6(){
     ipv4=$(curl -s4m8 api.ipify.org)
     ipv6=$(curl -s6m8 api64.ipify.org)
@@ -95,11 +118,63 @@ initwgcf(){
     chmod +x /usr/local/bin/wgcf
 }
 
+wgcfreg(){
+    if [[ -f /etc/wireguard/wgcf-account.toml ]]; then
+        cp -f /etc/wireguard/wgcf-account.toml /root/wgcf-account.toml
+    fi
+
+    until [[ -a wgcf-account.toml ]]; do
+        yellow "正在向CloudFlare WARP注册账号, 如提示429 Too Many Requests错误请耐心等待脚本重试注册即可"
+        wgcf register --accept-tos
+        sleep 5
+    done
+    chmod +x wgcf-account.toml
+
+    wgcf generate
+    chmod +x wgcf-profile.conf
+}
+
+installwgcf(){
+    checktun
+
+    if [[ $SYSTEM == "CentOS" ]]; then
+        ${PACKAGE_INSTALL[int]} epel-release
+        ${PACKAGE_INSTALL[int]} sudo curl wget iproute net-tools wireguard-tools iptables bc htop screen python3 iputils qrencode
+        if [[ $OSID == 9 ]] && [[ -z $(type -P resolvconf) ]]; then
+            wget -N https://gitlab.com/misakablog/warp-script/-/raw/main/files/resolvconf -O /usr/sbin/resolvconf
+            chmod +x /usr/sbin/resolvconf
+        fi
+    fi
+    if [[ $SYSTEM == "Fedora" ]]; then
+        ${PACKAGE_INSTALL[int]} sudo curl wget iproute net-tools wireguard-tools iptables bc htop screen python3 iputils qrencode
+    fi
+    if [[ $SYSTEM == "Debian" ]]; then
+        ${PACKAGE_UPDATE[int]}
+        ${PACKAGE_INSTALL[int]} sudo wget curl lsb-release bc htop screen python3 inetutils-ping qrencode
+        echo "deb http://deb.debian.org/debian $(lsb_release -sc)-backports main" | tee /etc/apt/sources.list.d/backports.list
+        ${PACKAGE_UPDATE[int]}
+        ${PACKAGE_INSTALL[int]} --no-install-recommends net-tools iproute2 openresolv dnsutils wireguard-tools iptables
+    fi
+    if [[ $SYSTEM == "Ubuntu" ]]; then
+        ${PACKAGE_UPDATE[int]}
+        ${PACKAGE_INSTALL[int]} sudo curl wget lsb-release bc htop screen python3 inetutils-ping qrencode
+        ${PACKAGE_INSTALL[int]} --no-install-recommends net-tools iproute2 openresolv dnsutils wireguard-tools iptables
+    fi
+    
+    if [[ $main -lt 5 ]] || [[ $minor -lt 6 ]] || [[ $VIRT =~ lxc|openvz ]]; then
+        wget -N --no-check-certificate https://cdn.jsdelivr.net/gh/mikupeto/warp-script/files/wireguard-go/wireguard-go-$(archAffix) -O /usr/bin/wireguard-go
+        chmod +x /usr/bin/wireguard-go
+    fi
+
+    initwgcf
+    wgcfreg
+}
+
 manage1(){
     green "请选择以下选项："
-    echo -e " ${GREEN}1.${PLAIN} 安装/切换 Wgcf-WARP单栈模式 ${YELLOW}(WARP IPv4)${PLAIN}"
-    echo -e " ${GREEN}2.${PLAIN} 安装/切换 Wgcf-WARP单栈模式 ${YELLOW}(WARP IPv6)${PLAIN}"
-    echo -e " ${GREEN}3.${PLAIN} 安装/切换 Wgcf-WARP双栈模式 ${YELLOW}(WARP IPv4+IPv6)${PLAIN}"
+    echo -e " ${GREEN}1.${PLAIN} 安装/切换 Wgcf-WARP 单栈模式 ${YELLOW}(WARP IPv4)${PLAIN}"
+    echo -e " ${GREEN}2.${PLAIN} 安装/切换 Wgcf-WARP 单栈模式 ${YELLOW}(WARP IPv6)${PLAIN}"
+    echo -e " ${GREEN}3.${PLAIN} 安装/切换 Wgcf-WARP 双栈模式 ${YELLOW}(WARP IPv4+IPv6)${PLAIN}"
     echo -e " ${GREEN}4.${PLAIN} 开启、关闭和重启 Wgcf-WARP"
     echo -e " ${GREEN}5.${PLAIN} ${RED}卸载 Wgcf-WARP${PLAIN}"
     read -rp "请输入选项：" answer1
