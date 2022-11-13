@@ -2,6 +2,8 @@ name: Fetch script's Jsdelivr cache
 
 on:
   push:
+    paths:
+      - 'warp.sh'
 
 jobs:
   build:
