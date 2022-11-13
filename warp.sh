@@ -313,6 +313,7 @@ manage1(){
     echo -e " ${GREEN}5.${PLAIN} ${RED}卸载 Wgcf-WARP${PLAIN}"
     read -rp "请输入选项：" answer1
     case $answer1 in
+        1) wgcfv4 ;;
         *) exit 1 ;;
     esac
 }
