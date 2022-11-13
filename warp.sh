@@ -926,6 +926,12 @@ manage4(){
     esac
 }
 
+check_status(){
+    yellow "正在获取VPS配置信息，请稍等..."
+    checkv4v6
+    checkwarp
+}
+
 menu(){
     yellow " CloudFlare WARP 一键脚本 "
     yellow "      by Mikupeto"
