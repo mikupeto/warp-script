@@ -950,6 +950,14 @@ check_status(){
             statc=$(curl -sx socks5h://localhost:$sockport https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
         fi
     fi
+
+    if [[ -n $(type -P wireproxy) ]]; then
+        sockport=$(grep BindAddress /etc/wireguard/proxy.conf 2>/dev/null | sed "s/BindAddress = 127.0.0.1://g")
+        statp=$(curl -sx socks5h://localhost:$sockport https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
+    fi
+
+    [[ -z $statc ]] && statc="${RED}Not Installed${PLAIN}"
+    [[ -z $statp ]] && statc="${RED}Not Installed${PLAIN}"
 }
 
 show_status(){
