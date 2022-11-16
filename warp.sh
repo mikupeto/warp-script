@@ -941,6 +941,12 @@ check_status(){
     [[ $warpv6 == on ]] && stat6="${YELLOW}WARP${PLAIN}"
     [[ $warpv4 == plus ]] && stat4="${GREEN}WARP+${PLAIN}"
     [[ $warpv6 == plus ]] && stat6="${GREEN}WARP+${PLAIN}"
+
+    if [[ -n $(type -P warp-cli) ]]; then
+        if [[ $(warp-cli --accept-tos settings 2>/dev/null | grep "Mode" | awk -F ": " '{print $2}') == "Warp" ]]; then
+            INTERFACE='--interface CloudflareWARP'
+        fi
+    fi
 }
 
 show_status(){
