@@ -944,7 +944,10 @@ check_status(){
 
     if [[ -n $(type -P warp-cli) ]]; then
         if [[ $(warp-cli --accept-tos settings 2>/dev/null | grep "Mode" | awk -F ": " '{print $2}') == "Warp" ]]; then
-            INTERFACE='--interface CloudflareWARP'
+            statc=$(curl -s4m8 https://www.cloudflare.com/cdn-cgi/trace -k --interface CloudflareWARP | grep warp | cut -d= -f2)
+        else
+            sockport=$(warp-cli --accept-tos settings 2>/dev/null | grep 'WarpProxy on port' | awk -F "port " '{print $2}')
+            statc=$(curl -sx socks5h://localhost:$sockport https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
         fi
     fi
 }
