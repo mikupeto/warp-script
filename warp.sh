@@ -953,6 +953,8 @@ show_status(){
 }
 
 menu(){
+    check_status
+    clear
     yellow " CloudFlare WARP 一键脚本 "
     yellow "      by Mikupeto"
     echo ""
@@ -963,6 +965,8 @@ menu(){
     echo -e " ${GREEN}4.${PLAIN} WARP 脚本小工具"
     echo  " -------------------- "
     echo -e " ${GREEN}0.${PLAIN} 退出脚本"
+    echo ""
+    show_status
     echo ""
     read -rp "请输入选项：" answer
     case $answer in
