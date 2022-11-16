@@ -933,8 +933,23 @@ manage4(){
 
 check_status(){
     yellow "正在获取VPS配置信息，请稍等..."
-    checkv4v6
     checkwarp
+    
+    [[ $warpv4 == off ]] && stat4="${RED}Normal${PLAIN}"
+    [[ $warpv6 == off ]] && stat6="${RED}Normal${PLAIN}"
+    [[ $warpv4 == on ]] && stat4="${YELLOW}WARP${PLAIN}"
+    [[ $warpv6 == on ]] && stat6="${YELLOW}WARP${PLAIN}"
+    [[ $warpv4 == plus ]] && stat4="${GREEN}WARP+${PLAIN}"
+    [[ $warpv6 == plus ]] && stat6="${GREEN}WARP+${PLAIN}"
+}
+
+show_status(){
+    echo  " -------------------- "
+    echo -e "IPv4: $stat4"
+    echo -e "IPv6: $stat6"
+    echo -e "WARP-Cli: $statc"
+    echo -e "WireProxy: $statp"
+    echo  " -------------------- "
 }
 
 menu(){
