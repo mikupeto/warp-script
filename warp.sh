@@ -75,11 +75,6 @@ archAffix(){
     esac
 }
 
-if [[ ! -f /usr/local/bin/nf ]]; then
-    wget https://cdn.jsdelivr.net/gh/mikupeto/warp-script/files/netflix-verify/nf-linux-$(archAffix) -O /usr/local/bin/nf
-    chmod +x /usr/local/bin/nf
-fi
-
 checkstack(){
     lan4=$(ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \K\S+')
     lan6=$(ip route get 2606:4700:4700::1111 2>/dev/null | grep -oP 'src \K\S+')
@@ -838,6 +833,8 @@ wgfile(){
         *) endpointip="162.159.193.10" ;;
     esac
     cp -f /etc/wireguard/wgcf.conf /root/wgcf-proxy.conf
+    sed -i '/PostUp/d;/PostDown/d;/AllowedIPs/d;/Endpoint/d' /root/wgcf-proxy.conf
+    sed -i "8a AllowedIPs = 0.0.0.0\/0\nAllowedIPs = ::\/0\n" /root/wgcf-proxy.conf
     sed -i "10a Endpoint = $endpointip:1701" /root/wgcf-proxy.conf
     green "Wgcf-WARP的WireGuard配置文件已提取成功！"
     yellow "文件已保存至：/root/wgcf-proxy.conf"
@@ -947,15 +944,24 @@ check_status(){
     if [[ -n $(type -P warp-cli) ]]; then
         if [[ $(warp-cli --accept-tos settings 2>/dev/null | grep "Mode" | awk -F ": " '{print $2}') == "Warp" ]]; then
             statc=$(curl -s4m8 https://www.cloudflare.com/cdn-cgi/trace -k --interface CloudflareWARP | grep warp | cut -d= -f2)
+            [[ $statc == on ]] && stat4="${YELLOW}WARP${PLAIN}"
+            [[ $statc == plus ]] && stat6="${GREEN}WARP+${PLAIN}"
         else
             sockport=$(warp-cli --accept-tos settings 2>/dev/null | grep 'WarpProxy on port' | awk -F "port " '{print $2}')
             statc=$(curl -sx socks5h://localhost:$sockport https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
+            [[ $statc == on ]] && stat4="${YELLOW}WARP with socks5 mode${PLAIN}"
+            [[ $statc == plus ]] && stat6="${GREEN}WARP+ with socks5 mode${PLAIN}"
         fi
+
+        [[ $statc == off || -z $statc ]] && statc="${RED}Not Started${PLAIN}"
     fi
 
     if [[ -n $(type -P wireproxy) ]]; then
         sockport=$(grep BindAddress /etc/wireguard/proxy.conf 2>/dev/null | sed "s/BindAddress = 127.0.0.1://g")
         statp=$(curl -sx socks5h://localhost:$sockport https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
+        [[ $statp == off || -z $statp ]] && statp="${RED}Not Started${PLAIN}"
+        [[ $statp == on ]] && stat4="${YELLOW}WARP${PLAIN}"
+        [[ $statp == plus ]] && stat6="${GREEN}WARP+${PLAIN}"
     fi
 
     [[ -z $statc ]] && statc="${RED}Not Installed${PLAIN}"
@@ -963,12 +969,12 @@ check_status(){
 }
 
 show_status(){
-    echo  " -------------------- "
+    echo  " ------------------------------------ "
     echo -e "IPv4: $stat4"
     echo -e "IPv6: $stat6"
     echo -e "WARP-Cli: $statc"
     echo -e "WireProxy: $statp"
-    echo  " -------------------- "
+    echo  " ------------------------------------ "
 }
 
 menu(){
