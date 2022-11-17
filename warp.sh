@@ -399,6 +399,7 @@ checkwgcf(){
         if [[ $warpv4 =~ on|plus ]] || [[ $warpv6 =~ on|plus ]]; then
             systemctl enable wg-quick@wgcf >/dev/null 2>&1
             green "Wgcf-WARP 已启动成功！"
+            check_status && show_status
             break
         else
             red "Wgcf-WARP 启动失败！"
@@ -468,7 +469,7 @@ installcli(){
         checkv4v6
     fi
 
-    if [[ -z $v4 ]]; then
+    if [[ -z $ipv4 ]]; then
         red "WARP-Cli暂时不支持纯IPv6的VPS，退出安装！"
         exit 1
     fi
@@ -543,6 +544,7 @@ installcli(){
             fi
         done
         green "WARP-Cli IPv4网卡出口模式已安装成功！"
+        check_status && show_status
     fi
 
     if [[ $warpcli == 2 ]]; then
@@ -571,6 +573,7 @@ installcli(){
             exit 1
         else
             green "WARP-Cli 代理模式已启动成功!"
+            check_status && show_status
         fi
     fi
 }
@@ -742,8 +745,7 @@ TEXT
     sleep 5
     systemctl enable wireproxy-warp >/dev/null 2>&1
     green "WireProxy-WARP 代理模式已启动成功!"
-    echo ""
-    showIP
+    check_status && show_status
 }
 
 wireproxy_changeport(){
