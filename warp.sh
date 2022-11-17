@@ -864,6 +864,16 @@ warpup(){
     green "创建刷WARP+流量任务成功！ Screen会话名称为：$screenname"
 }
 
+warpsw(){
+    green "请选择需要切换账户的客户端："
+    echo -e " ${GREEN}1.${PLAIN} Wgcf-WARP和WireProxy-WARP"
+    echo -e " ${GREEN}2.${PLAIN} WARP-Cli ${RED}(目前只支持升级至WARP+)${PLAIN}"
+    read -rp "请输入选项：" answerwpsw
+    case $answerwpsw in
+        *) exit 1 ;;
+    esac
+}
+
 manage1(){
     green "请选择以下选项："
     echo -e " ${GREEN}1.${PLAIN} 安装/切换 Wgcf-WARP 单栈模式 ${YELLOW}(WARP IPv4)${PLAIN}"
