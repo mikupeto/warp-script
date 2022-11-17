@@ -935,6 +935,8 @@ check_status(){
     yellow "正在获取VPS配置信息，请稍等..."
     checkwarp
     
+    stat4="${RED}Not Configured${PLAIN}"
+    stat6="${RED}Not Configured${PLAIN}"
     [[ $warpv4 == off ]] && stat4="Normal"
     [[ $warpv6 == off ]] && stat6="Normal"
     [[ $warpv4 == on ]] && stat4="${YELLOW}WARP${PLAIN}"
@@ -957,7 +959,7 @@ check_status(){
     fi
 
     [[ -z $statc ]] && statc="${RED}Not Installed${PLAIN}"
-    [[ -z $statp ]] && statc="${RED}Not Installed${PLAIN}"
+    [[ -z $statp ]] && statp="${RED}Not Installed${PLAIN}"
 }
 
 show_status(){
