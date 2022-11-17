@@ -66,11 +66,6 @@ if [[ -z $(type -P curl) ]]; then
     ${PACKAGE_INSTALL[int]} curl
 fi
 
-if [[ ! -f /usr/local/bin/nf ]]; then
-    wget https://cdn.jsdelivr.net/gh/mikupeto/warp-script/files/netflix-verify/nf-linux-$(archAffix) -O /usr/local/bin/nf
-    chmod +x /usr/local/bin/nf
-fi
-
 archAffix(){
     case "$(uname -m)" in
         x86_64 | amd64 ) echo 'amd64' ;;
@@ -79,6 +74,11 @@ archAffix(){
         * ) red "脚本暂不不支持 $(uname -m) 架构!" && exit 1 ;;
     esac
 }
+
+if [[ ! -f /usr/local/bin/nf ]]; then
+    wget https://cdn.jsdelivr.net/gh/mikupeto/warp-script/files/netflix-verify/nf-linux-$(archAffix) -O /usr/local/bin/nf
+    chmod +x /usr/local/bin/nf
+fi
 
 checkstack(){
     lan4=$(ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \K\S+')
@@ -837,8 +837,8 @@ wgfile(){
         2) endpointip="[2606:4700:d0::]" ;;
         *) endpointip="162.159.193.10" ;;
     esac
-    cp -f /etc/wireguard/wgcf-profile.conf /root/wgcf-proxy.conf
-    sed -i "10a Endpoint = $endpointip:2408" /root/wgcf-proxy.conf
+    cp -f /etc/wireguard/wgcf.conf /root/wgcf-proxy.conf
+    sed -i "10a Endpoint = $endpointip:1701" /root/wgcf-proxy.conf
     green "Wgcf-WARP的WireGuard配置文件已提取成功！"
     yellow "文件已保存至：/root/wgcf-proxy.conf"
     yellow "WireGuard 节点配置二维码如下所示："
