@@ -399,7 +399,8 @@ checkwgcf(){
         if [[ $warpv4 =~ on|plus ]] || [[ $warpv6 =~ on|plus ]]; then
             systemctl enable wg-quick@wgcf >/dev/null 2>&1
             green "Wgcf-WARP 已启动成功！"
-            check_status && show_status
+            check_status
+            show_status
             break
         else
             red "Wgcf-WARP 启动失败！"
@@ -544,7 +545,8 @@ installcli(){
             fi
         done
         green "WARP-Cli IPv4网卡出口模式已安装成功！"
-        check_status && show_status
+        check_status
+        show_status
     fi
 
     if [[ $warpcli == 2 ]]; then
@@ -573,7 +575,8 @@ installcli(){
             exit 1
         else
             green "WARP-Cli 代理模式已启动成功!"
-            check_status && show_status
+            check_status
+            show_status
         fi
     fi
 }
@@ -745,7 +748,8 @@ TEXT
     sleep 5
     systemctl enable wireproxy-warp >/dev/null 2>&1
     green "WireProxy-WARP 代理模式已启动成功!"
-    check_status && show_status
+    check_status
+    show_status
 }
 
 wireproxy_changeport(){
@@ -978,6 +982,8 @@ check_status(){
 
     [[ -z $statc ]] && statc="${RED}Not Installed${PLAIN}"
     [[ -z $statp ]] && statp="${RED}Not Installed${PLAIN}"
+
+    sleep 5
 }
 
 show_status(){
@@ -992,15 +998,15 @@ show_status(){
 menu(){
     check_status
     clear
-    yellow " CloudFlare WARP 一键脚本 "
-    yellow "      by Mikupeto"
+    yellow "      CloudFlare WARP 一键脚本 "
+    yellow "           by Mikupeto"
     echo ""
-    echo  " ---------------------- "
+    echo  " ------------------------------------ "
     echo -e " ${GREEN}1.${PLAIN} 管理 Wgcf-WARP"
     echo -e " ${GREEN}2.${PLAIN} 管理 WARP-Cli"
     echo -e " ${GREEN}3.${PLAIN} 管理 WireProxy-WARP"
     echo -e " ${GREEN}4.${PLAIN} WARP 脚本小工具"
-    echo  " -------------------- "
+    echo  " ------------------------------------ "
     echo -e " ${GREEN}0.${PLAIN} 退出脚本"
     echo ""
     show_status
